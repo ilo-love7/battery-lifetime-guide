@@ -9,6 +9,14 @@
 
 ![从零复现 Severson 2019：项目概览](项目宣传图.png)
 
+## English abstract
+
+> **Reproduction of Severson et al., *Nature Energy* 2019** (battery cycle-life prediction from the first 100 cycles) — on the official `test_ind` split (n = 43), an elastic net with 6 early-cycle features reaches **5.9% median percentage error (95% bootstrap CI 5.1–8.9)** vs. the paper's 9.1% point estimate, with the full error-attribution chain (**33.6% → 5.9%**) documented step by step.
+>
+> **Original extensions:** NASA dataset label audit (**3/34** cycle-life labels validated; **18/18** transfer observations out-of-range); zero-shot MIT→NASA transfer with **×75–125** error inflation; domain-gap decomposition in four matched experiments (voltage-window artifact ruled out — and reversed); Kaplan–Meier survival analysis (median **125** cycles, cross-validated with `lifelines`).
+>
+> A guide-style repo: **13 Chinese documents** (theory → reproduction → debugging log → interview cards), runnable scripts, tests & CI. *Main text is in Chinese.*
+
 ---
 
 ## 成绩单（先看结果）
