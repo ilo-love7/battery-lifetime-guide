@@ -1,0 +1,4 @@
+﻿训练,测试,n_test,中位误差%,平均误差%
+batch2+batch3,batch1,41,19.3,20.4
+batch1+batch3,batch2,43,34.3,40.1
+batch1+batch2,batch3,40,8.4,12.5

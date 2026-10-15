@@ -1,0 +1,2 @@
+events,censored,weibull_shape,weibull_scale,weibull_median,weibull_median_boot_ci95_low,weibull_median_boot_ci95_high,weibull_bootstrap_success_rate,km_median,km_median_boot_ci95_low,km_median_boot_ci95_high,km_bootstrap_finite_rate,bootstrap_resamples
+3,11,2.8720351476943544,179.30043019769525,157.8189393209359,102.37392539697906,inf,0.9662,125.0,97.0,inf,0.7552,10000

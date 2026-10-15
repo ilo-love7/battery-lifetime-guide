@@ -1,0 +1,14 @@
+﻿track,candidate,feature_set,training_cv_median_error_pct,selected_parameters
+A1,manual_grid_EN6,baseline_6,8.43981745691605,"{""alpha"": 0.004291934260128779, ""l1_ratio"": 0.05}"
+A2,ElasticNet,baseline_6,8.43981745691605,"{""alpha"": 0.004291934260128779, ""l1_ratio"": 0.05}"
+A2,RandomForest,baseline_6,10.237108832276686,"{""min_samples_leaf"": 2, ""max_depth"": null}"
+A2,ElasticNet,delta_q_18,16.426558912474007,"{""alpha"": 0.11513953993264481, ""l1_ratio"": 0.05}"
+A2,RandomForest,delta_q_18,12.91007371755573,"{""min_samples_leaf"": 2, ""max_depth"": null}"
+A2,ElasticNet,capacity_blocks_9,20.01871638913871,"{""alpha"": 0.013894954943731374, ""l1_ratio"": 0.05}"
+A2,RandomForest,capacity_blocks_9,14.232904458946525,"{""min_samples_leaf"": 2, ""max_depth"": 5}"
+A2,ElasticNet,combined_33,7.276307449462899,"{""alpha"": 0.0021209508879201904, ""l1_ratio"": 1.0}"
+A2,RandomForest,combined_33,10.564453210876156,"{""min_samples_leaf"": 2, ""max_depth"": null}"
+A3,A3_HistGradientBoosting,baseline_6,29.21514259056145,fixed before final test
+A4,A4_Huber_log_target,baseline_6,8.543653417051436,fixed before final test
+A3,OOF_EN_RF_Ridge,baseline_6,7.543489344525277,base EN/RF fixed; Ridge alpha=1
+A4,short_life_specialist,baseline_6,,not fitted: 1 training examples in 148-335 cycle band; requires at least 5 for exploratory classification/regression

@@ -1,0 +1,12 @@
+*.mat
+*.pkl
+data/*
+!data/README.md
+.cache/
+config.toml
+results/generated/
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+项目一页报告_*备份*.pdf
+项目一页报告_*复核版*.pdf

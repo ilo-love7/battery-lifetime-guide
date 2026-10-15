@@ -1,0 +1,32 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile scripts
+        run: python -m compileall -q scripts tests
+      - name: Run tests
+        run: python -m pytest tests -q
+      - name: Run data-free tutorial demo
+        run: python scripts/run_project.py --stage quick
+      - name: Validate full route manifest without datasets
+        run: python scripts/run_project.py --stage full --dry-run

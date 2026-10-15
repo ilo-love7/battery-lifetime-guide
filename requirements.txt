@@ -1,0 +1,9 @@
+# Verified on Python 3.14.3; pin direct dependencies for reproducible reruns.
+numpy==2.5.3
+pandas==3.0.6
+matplotlib==3.11.2
+scikit-learn==1.9.1
+scipy==1.18.1
+h5py==3.16.0
+lifelines==0.30.3
+pytest==9.1.1

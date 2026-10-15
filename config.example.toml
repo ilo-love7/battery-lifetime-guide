@@ -1,0 +1,8 @@
+# Copy this file to config.toml and edit paths if your datasets are elsewhere.
+# config.toml is intentionally ignored by git; raw datasets must not be committed.
+
+[paths]
+mit_dir = "data/mit"
+nasa_dir = "data/nasa"
+cache_dir = ".cache"
+output_dir = "results/generated"
