@@ -1,6 +1,10 @@
 # Verified on Python 3.14.3; pin direct dependencies for reproducible reruns.
+# pandas is pinned <3.0 because lifelines 0.30.3 requires pandas<3.0
+# (pinning pandas==3.0.6 made `pip install -r requirements.txt` unsatisfiable
+# and broke CI since 2026-10-17; 2.3.3 is the version this repo was actually
+# verified with, and ships cp314 wheels).
 numpy==2.5.3
-pandas==3.0.6
+pandas==2.3.3
 matplotlib==3.11.2
 scikit-learn==1.9.1
 scipy==1.18.1
