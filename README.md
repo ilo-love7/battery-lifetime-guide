@@ -1,123 +1,120 @@
-# 从零复现 Severson 2019：一份带"事故现场"的电池寿命预测学习攻略
+<div align="center">
 
-**Data-driven prediction of battery cycle life — a reproduction & failure-annotated learning guide**
+# Reproducing Severson 2019 from Scratch
 
-> 用前 100 圈的数据预测电池还能活多少圈——Severson et al., *Nature Energy* 2019。
-> 本仓库复现了这篇论文，并把复现路上的每一个 bug、每一次误判、每一条被数据打脸的预期，全部原样保留。
+**A battery cycle-life prediction guide with the crash scenes left in**
 
-![结果](https://img.shields.io/badge/EN6%20median%20error-5.9%25%20%5BCI%205.1~8.9%5D-brightgreen) ![论文](https://img.shields.io/badge/paper-9.1%25-blue)
+![EN6 median error](https://img.shields.io/badge/EN6%20median%20error-5.9%25%20%5BCI%205.1~8.9%5D-brightgreen)
+![paper](https://img.shields.io/badge/paper-9.1%25-blue)
+![docs](https://img.shields.io/badge/docs-13%20Chinese%20documents-orange)
+![license](https://img.shields.io/badge/license-MIT-green)
 
-![从零复现 Severson 2019：项目概览](项目宣传图.png)
+<p align="center">
+  <b>English</b> · <a href="./README.zh-CN.md">简体中文</a>
+</p>
 
-## English abstract
-
-> **Reproduction of Severson et al., *Nature Energy* 2019** (battery cycle-life prediction from the first 100 cycles) — on the official `test_ind` split (n = 43), an elastic net with 6 early-cycle features reaches **5.9% median percentage error (95% bootstrap CI 5.1–8.9)** vs. the paper's 9.1% point estimate, with the full error-attribution chain (**33.6% → 5.9%**) documented step by step.
->
-> **Original extensions:** NASA dataset label audit (**3/34** cycle-life labels validated; **18/18** transfer observations out-of-range); zero-shot MIT→NASA transfer with **×75–125** error inflation; domain-gap decomposition in four matched experiments (voltage-window artifact ruled out — and reversed); Kaplan–Meier survival analysis (median **125** cycles, cross-validated with `lifelines`).
->
-> A guide-style repo: **13 Chinese documents** (theory → reproduction → debugging log → interview cards), runnable scripts, tests & CI. *Main text is in Chinese.*
+</div>
 
 ---
 
-## 成绩单（先看结果）
+![Project overview](项目宣传图.png)
 
-| 模型 | 官方口径中位误差 | 均值 | batch3 外推 | 整批外推 |
+> Predict how many cycles a battery has left from its first 100 cycles — Severson et al., *Nature Energy* 2019.
+> This repository reproduces that paper, and keeps every bug, every misjudgement and every expectation that the data knocked down exactly where it happened.
+
+**This is a guide-style repository. The main text — 13 documents covering theory, reproduction, a debugging log and interview cards — is written in Chinese.** This page summarises the results and points to the entry points; the Chinese version is [README.zh-CN.md](./README.zh-CN.md).
+
+## Key results
+
+On the official `test_ind` split (n = 43), an elastic net on 6 early-cycle features reaches **5.9% median percentage error** (95% bootstrap CI 5.1–8.9), against the paper's 9.1% point estimate. The full error-attribution chain (**33.6% → 5.9%**) is documented step by step.
+
+| Model | Official-split median error | Mean | batch3 extrapolation | Whole-batch extrapolation |
 |---|---|---|---|---|
-| 弹性网络（六特征） | **5.9%** [CI 5.1~8.9] | 36.5%* | 4.9% | 28.7% |
-| 随机森林 | 8.2% [4.6~12.2] | 13.9% | 9.4% | 32.4% |
-| 论文原报告 | 9.1% | — | 未报告 | 未声称 |
+| Elastic net (6 features) | **5.9%** [CI 5.1–8.9] | 36.5%* | 4.9% | 28.7% |
+| Random forest | 8.2% [4.6–12.2] | 13.9% | 9.4% | 32.4% |
+| Paper's reported value | 9.1% | — | not reported | not claimed |
 
-\* 均值被少数夭折电池拉高；剔除寿命<500圈后均值 27.0%，预测截断敏感性结果 24.1%，见 docs/03。论文侧没有同口径 CI，故只称点估计接近，不宣称统计一致或优于。
+\* The mean is dragged up by a few short-lived cells; excluding cells below 500 cycles gives 27.0%, and the prediction-truncation sensitivity run gives 24.1% — see `docs/03`. The paper reports no CI on the same protocol, so this is described as a point estimate in the same range, **not** as statistical agreement or superiority.
 
-超越复现的原创部分：
+### Original work beyond the reproduction
 
-- **数据集审计**：NASA 34 颗电池逐颗体检，证明寿命标签只对 **3/34** 成立——任何"直接迁移"都在用毒标签；
-- **零样本迁移证据链**：MIT→NASA 迁移 EN 失控 ×75~125；按 MIT dev P05–P95 计算，NASA 三颗的 18/18 个电池×特征观测越界，明细见 `results/5_跨数据集迁移/MIT特征分位对照.csv`；
-- **域间隙拆账**：四实验拆嫌疑——标签口径已排除（E2 ×202），窗口嫌疑已排除且反转（v2.1 重跑：真 3.6–3.8V 切片 E1 ×120→×246，匹配窗口反而更糟）→ 主犯=**协议级非平稳性**——"同样的早期指纹，不同的未来"；
-- **KM 生存分析**：把 11 颗删失电池从"被丢弃"变成信息源，中位寿命 125 圈。
+- **Dataset audit** — all 34 NASA cells examined one by one; the cycle-life label holds for only **3/34**. Any "direct transfer" is training on poisoned labels.
+- **Zero-shot transfer evidence chain** — MIT→NASA elastic-net transfer blows up by **×75–125**; measured against the MIT dev P05–P95 range, **18/18** cell × feature observations on the three NASA cells fall outside it. Details in `results/5_跨数据集迁移/MIT特征分位对照.csv`.
+- **Domain-gap accounting** — four matched experiments rule out the suspects: label definition is excluded (E2 ×202), the voltage-window hypothesis is excluded *and reversed* (v2.1 rerun: a true 3.6–3.8 V slice goes E1 ×120 → ×246, so matching the window makes it worse). The main culprit is **protocol-level non-stationarity** — "the same early fingerprint, a different future".
+- **Kaplan–Meier survival analysis** — the 11 censored cells turn from "discarded" into information: median lifetime **125 cycles**.
 
-## 这份攻略的四种打开方式
+## Four ways to use this guide
 
-| 你是谁 | 路线 | 入口 |
+| If you are… | Route | Entry point |
 |---|---|---|
-| **想学会这套方法** | 按阶段 1→5 跟做，每个阶段有直觉建立 + 动手练习 | [docs/00_怎么用这份攻略.md](docs/00_怎么用这份攻略.md) |
-| **只想复现结果** | 环境 → 数据 → 跑 scripts/ 定稿脚本 | [docs/01_环境与数据_快速上手.md](docs/01_环境与数据_快速上手.md) |
-| **从复现做个人求职作品** | 完成官方复现 → 设计自己的问题/数据 → 冻结评估口径 → 如实记录贡献 | [docs/11_实习求职包装指南.md](docs/11_实习求职包装指南.md) |
-| **（HR/技术面试官）评估作者** | README → 03 复现篇 → 04 创新篇 → 10 问答卡 | 从本页往下读即可 |
+| **Here to learn the method** | Follow stages 1→5, each with intuition building and hands-on exercises | [`docs/00_怎么用这份攻略.md`](docs/00_怎么用这份攻略.md) |
+| **Here to reproduce the numbers** | Environment → data → run the frozen scripts in `scripts/` | [`docs/01_环境与数据_快速上手.md`](docs/01_环境与数据_快速上手.md) |
+| **Building a job-application portfolio piece from it** | Complete the official reproduction → design your own question/data → freeze the evaluation protocol → record contributions honestly | [`docs/11_实习求职包装指南.md`](docs/11_实习求职包装指南.md) |
+| **An interviewer evaluating the author** | README → reproduction doc → original-work doc → Q&A cards | Just keep reading this page |
 
-## 仓库地图
+*All document filenames are in Chinese.*
+
+## Repository map
 
 ```
-├── README.md                  ← 你在这里
-├── CONTRIBUTING.md            ← 数据保护、实验口径与 AI/引用规范
-├── .github/workflows/ci.yml   ← 无原始数据的自动测试
-├── 项目一页报告.pdf            ★ 投递附件：成绩单+归因链+主图（单页）
+├── README.md                  ← you are here
+├── README.zh-CN.md            ← Chinese version
+├── CONTRIBUTING.md            ← data protection, experiment protocol, AI/citation rules
+├── .github/workflows/ci.yml   ← automatic tests that need no raw data
+├── 项目一页报告.pdf            ★ one-page attachment: scorecard + attribution chain + main figure
 ├── docs/
-│   ├── 00_怎么用这份攻略.md         学习路线图
-│   ├── 01_环境与数据_快速上手.md    环境、数据下载、已知坑表
-│   ├── 02_原理篇.md                每个概念为什么出现（含思考题）
-│   ├── 03_复现篇.md                从模拟数据到 5.9% 的完整叙事
-│   ├── 04_创新篇.md                审计/迁移/拆账/生存分析
-│   ├── 05_调试实录.md              ★ 17 个编号现场（本攻略最独特部分）
-│   ├── 06_数据集审计方法论.md      任何公开数据集套用前的 5 项检查
-│   ├── 07_概念地图.md              一张图串起全部原理
-│   ├── 08_常见错误FAQ.md           症状→根因速查表
-│   ├── 09_读者练习.md              每阶段 2~3 道动手题
-│   ├── 10_面试问答卡.md            30 问
-│   ├── 11_实习求职包装指南.md      ★ 怎么完成项目/简历模板/面试话术/诚信边界
-│   ├── 12_代码优化提案.md          优化实验菜单（约束/优先级/判读标准）
-│   ├── buggy_注释版/               ★ 带事故注释的 bug 版代码（勿运行，教学用）
-│   └── archive/                    原始工作日志、完整错误清单
-├── scripts/                   定稿脚本 step1~5d；step6 为独立优化实验
-├── figures/                   各阶段图库（目录名=阶段号）
-├── results/                   全部数据表（CSV），含 optimization_v1 实验结果
-└── data/README.md             数据集下载与放置说明
+│   ├── 00_怎么用这份攻略.md          learning roadmap
+│   ├── 01_环境与数据_快速上手.md     environment, data download, known pitfalls
+│   ├── 02_原理篇.md                why each concept exists (with exercises)
+│   ├── 03_复现篇.md                the full narrative from synthetic data to 5.9%
+│   ├── 04_创新篇.md                audit / transfer / accounting / survival analysis
+│   ├── 05_调试实录.md              ★ 17 numbered incidents — the most distinctive part
+│   ├── 06_数据集审计方法论.md       five checks before adopting any public dataset
+│   ├── 07_概念地图.md              one diagram linking every concept
+│   ├── 08_常见错误FAQ.md           symptom → root cause lookup
+│   ├── 09_读者练习.md              2–3 hands-on tasks per stage
+│   ├── 10_面试问答卡.md            30 interview questions
+│   ├── 11_实习求职包装指南.md      ★ portfolio packaging, resume templates, honesty boundaries
+│   ├── 12_代码优化提案.md          optimisation experiment menu
+│   ├── buggy_注释版/               ★ annotated buggy code (teaching only, do not run)
+│   └── archive/                    raw work logs, full error list
+├── scripts/                   frozen scripts step1–5d; step6 is a separate optimisation experiment
+├── figures/                   figure library, directory names = stage numbers
+├── results/                   all data tables (CSV), incl. the optimization_v1 experiment
+└── data/README.md             dataset download and placement instructions
 ```
 
-## 记录与复核材料
+## Quick start (three lines)
 
-所有审查结论、修复时间线、NASA 34 颗全量复跑和发布边界统一见[项目审查与迭代记录](docs/项目审查与迭代记录.md)。三轮审查报告、任务书和前期工作记录的原始快照归档于 `docs/archive/审查原始记录/`；详细优化实验数字和执行过程见[代码优化提案执行记录](docs/工作记录_代码优化提案_2026-10-14.md)。
+1. **Environment** — Python 3.14, then `python -m pip install -r requirements.txt`. To try it without any data: `python scripts/run_project.py --stage quick`.
+2. **Data** — before a full reproduction, download the MIT/NASA datasets following `data/README.md`; the default location is `data/mit` and `data/nasa`. If the data lives elsewhere, copy `config.example.toml` to the git-ignored `config.toml` and verify with `--show-paths`.
+3. **Run** — `python scripts/run_project.py --stage paper` reproduces the paper; `extensions` runs the NASA extensions, `optimization` runs step6, `full` walks every stage in order. `full` is a self-contained teaching script and re-parses roughly 8.3 GB of MIT data, so use `paper` if you only want the reproduction. Generated artifacts go to `results/generated/`; the `results/` committed to the repo is a verified snapshot.
 
-## 快速开始（三行版）
+## A note from the author
 
-1. 装环境：Python 3.14，`python -m pip install -r requirements.txt`；无数据快速体验：`python scripts/run_project.py --stage quick`。
-2. 完整复现前按 `data/README.md` 下载 MIT/NASA 数据；默认放在 `data/mit`、`data/nasa`。数据另存他处时复制 `config.example.toml` 为被忽略的 `config.toml`，再用 `--show-paths` 检查。
-3. `python scripts/run_project.py --stage paper` 复现论文；`extensions` 跑 NASA 扩展，`optimization` 跑 step6，`full` 按全阶段顺序执行。`full` 为自包含教学脚本，会重复解析约 8.3GB MIT 数据；只想复现论文时用 `paper`。生成物位于 `results/generated/`，仓库内 `results/` 是已核验快照。
+The most valuable thing here is not the 5.9%. It is the error-attribution chain: **33.6% → 32.7% → 31.6% → poisoned labels → 5.9%**. Every step of "wrong → rule out → relocate" is recorded in [`docs/05_调试实录.md`](docs/05_调试实录.md). Tutorials online only hand you the code that worked; this one hands you the mistakes too.
 
-## 作者的话
+> ilo · undergraduate in new energy / materials
+> dual-AI cross-audit workflow (independent pipelines cross-checked, bit-level consistency verification)
 
-这个项目里最有价值的不是 5.9%，而是那条误差归因链：**33.6% → 32.7% → 31.6% → 毒标签 → 5.9%**。每一步"错误→排除→再定位"都记录在 [docs/05_调试实录.md](docs/05_调试实录.md)——网上教程只给你正确的代码，这里把犯错的过程也给你。
+## Review and verification material
 
-> ilo · 新能源/材料方向在读本科生
-> 双 AI 交叉审计工作流（独立管道互验 + 逐位一致性检查）
+All review conclusions, the fix timeline, the full 34-cell NASA rerun and the release boundaries are collected in [`docs/项目审查与迭代记录.md`](docs/项目审查与迭代记录.md). Raw snapshots of three review rounds, task briefs and earlier work records are archived under `docs/archive/审查原始记录/`; the detailed optimisation numbers and execution log are in [`docs/工作记录_代码优化提案_2026-10-14.md`](docs/工作记录_代码优化提案_2026-10-14.md).
 
-## 兄弟仓库：另一份独立复现
+## Sibling repository: a second independent reproduction
 
-同一批数据（NASA PCoE + MIT-Stanford）、同一篇 Severson 2019，另有一份独立复现
-**[锂电池 ECM-RUL](https://github.com/ilo-love7/battery-ecm-rul)**（仓库：`ilo-love7/battery-ecm-rul`），形态与本文互补：
-本攻略是**学习路径**（step1→6 + 调试实录 + 面试卡），那份是**自洽的证据链**
-（ECM 参数辨识、PyBaMM 物理仿真、第三方辨识审计、内阻真值标尺）。
-两者有意保持为两个仓库，完整分工与口径对照见 [RELATED.md](RELATED.md)。
+The same data (NASA PCoE + MIT-Stanford) and the same Severson 2019 paper are reproduced independently in **[battery-ecm-rul](https://github.com/ilo-love7/battery-ecm-rul)**. The two are deliberately kept separate and complement each other: this repository is a **learning path** (step1→6, debugging log, interview cards), that one is a **self-consistent evidence chain** (ECM parameter identification, PyBaMM physical simulation, third-party identification audit, internal-resistance ground-truth ruler). The full division of labour and protocol comparison is in [RELATED.md](RELATED.md).
 
-**两份复现的互证结论已于 2026-10-18 更新**（受控实验，详见 [RELATED.md](RELATED.md) 与
-[docs/兄弟仓库互证与受控实验_2026-10-18.md](docs/兄弟仓库互证与受控实验_2026-10-18.md)）：
+**Cross-verification results between the two reproductions were updated on 2026-10-18** (controlled experiments; see [RELATED.md](RELATED.md) and [`docs/兄弟仓库互证与受控实验_2026-10-18.md`](docs/兄弟仓库互证与受控实验_2026-10-18.md)):
 
-- **四条链的对齐改由逐颗直接核验证据支撑**（主测试 43 颗成员完全一致、寿命标签仅 3 颗续跑电池差 1 圈），
-  不再依赖「RF 8.2% vs 8.12% 一致」——同口径有效对照（对方论文六特征 RF 9.38%）显示 RF 同样差约
-  1.2 pp，与 EN 同向；此前的「完全一致」是不同特征集之间的巧合接近，不是四条链的证据。
-- **ElasticNet 2.4 pp 差距的旧归因已被对方实验证伪并重新定位**：`l1_ratio` 只值 0.14 pp
-  （同一份特征快照上固定 0.5 → 6.18%，网格搜索 → 6.04%）；差距主因是两条管线的论文六特征
-  **数值定义差异**（对方旧配置换特征来源即从 6.18% 跳到 8.33%，误差结构完全不同）。
-  本攻略的 5.9% 与对方存档值 8.33% 仍**不可互证，只可对照**。
-- **显著性纪律与对方补测一致**：n=43 的 bootstrap CI 宽 5–9 个百分点，对方补测显示主测试上
-  GBM（6.20%）与 EN（7.77%）差距并不显著（Wilcoxon p=0.93）——小样本下的模型排名多为描述性；
-  本攻略「点估计接近论文 9.1%、不宣称统计一致或优于」的原有纪律与此互为印证。
+- **Alignment of the four chains now rests on direct cell-by-cell verification**, not on "RF 8.2% vs 8.12% agree" — the 43 main-test cells match exactly, and cycle-life labels differ by 1 cycle on only 3 continuation cells. A same-protocol control (the other pipeline's 6-feature RF at 9.38%) shows RF is also off by about 1.2 pp in the same direction as EN. The earlier "perfect agreement" was a coincidence between different feature sets, not evidence for the four chains.
+- **The old attribution for the 2.4 pp ElasticNet gap was falsified by the other side's experiments and relocated**: `l1_ratio` accounts for only 0.14 pp (fixing it at 0.5 on the same feature snapshot gives 6.18%; grid search gives 6.04%). The gap is mainly a **numerical definition difference** in the two pipelines' 6 paper features — switching the other side's old config to a different feature source jumps from 6.18% to 8.33%, with a completely different error structure. This repository's 5.9% and the other side's archived 8.33% **still cannot be cross-verified, only compared**.
+- **Significance discipline agrees with the other side's supplementary tests**: the n = 43 bootstrap CI is 5–9 pp wide, and the other side's supplementary tests show the GBM (6.20%) vs EN (7.77%) gap on the main test set is not significant (Wilcoxon p = 0.93) — model rankings at this sample size are mostly descriptive. This repository's existing discipline ("the point estimate is close to the paper's 9.1%; no claim of statistical agreement or superiority") is corroborated by that.
 
-对方可以从本攻略直接引用的三条结论：NASA 34 颗标签只对 3/34 成立、零样本迁移 ×75–125 误差膨胀、
-域间隙拆账把主犯定位到协议级非平稳性。
+Three conclusions the other repository can cite directly from this one: only 3/34 NASA labels hold; zero-shot transfer inflates error by ×75–125; domain-gap accounting locates the main culprit in protocol-level non-stationarity.
 
-## License & 数据致谢
+## License and data credits
 
-- 代码：MIT License
+- Code: MIT License
 - Severson, K.A. et al. *Data-driven prediction of battery cycle life before capacity degradation.* Nat. Energy 4, 383–391 (2019)
-- 数据：MIT-Stanford 数据集（原论文官方）与 NASA PCoE 电池数据集，版权归原机构所有
+- Data: the MIT-Stanford dataset (official, from the original paper) and the NASA PCoE battery dataset; copyright remains with the original institutions
