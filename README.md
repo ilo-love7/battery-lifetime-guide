@@ -61,12 +61,51 @@ Typical uses: (1) a **worked reference implementation** of Severson 2019 to diff
 (3) **teaching material** for a battery-data course — 13 Chinese documents with hands-on exercises at every stage;
 (4) a **portfolio / interview-preparation route** with 30 Q&A cards ([`docs/10_面试问答卡.md`](docs/10_面试问答卡.md)).
 
-Everything needed to smoke-test the repository is offline: `python -m pytest tests -q` runs **6 tests** with no datasets,
+Everything needed to smoke-test the repository is offline: `python -m pytest tests -q` runs **11 tests** with no datasets,
 `python scripts/run_project.py --stage quick` runs the data-free tutorial demo, and
 `python scripts/run_project.py --stage full --dry-run` validates all 16 script steps of the full route without touching data.
 The reproduction routes (`paper`, `extensions`, `optimization`) need the MIT-Stanford and NASA PCoE datasets placed under
 `data/mit` and `data/nasa` as described in [`data/README.md`](data/README.md); the `full` route re-parses roughly 8.3 GB of
 MIT data, so use `paper` if you only want the reproduction. CI (workflow `tests`) runs on Linux (`ubuntu-latest`) with Python 3.14 only.
+
+## Checking whether two protocols are comparable
+
+Every number on this page rests on one question: **are the two groups of cells even comparable?** Rather than leaving that to prose, `scripts/protocol_drift.py` makes it a reusable diagnostic — a two-sample Kolmogorov–Smirnov drift test plus a quantile-alignment table — and every verdict it prints carries an explicit statement of what the result does **not** prove.
+
+| Diagnostic | Entry point |
+|---|---|
+| Two-sample drift test (KS statistic, p-value, median shift) | `protocol_drift.ks_drift` |
+| Quantile-by-quantile alignment of a target against a reference | `protocol_drift.quantile_alignment` |
+| Is each observation inside the reference P05–P95 band? | `protocol_drift.band_audit`, `protocol_drift.feature_band_audit` |
+| Every pairwise comparison across a set of protocols | `protocol_drift.ks_matrix` |
+| Re-derive this page's headline drift numbers from committed CSVs | `python scripts/protocol_drift.py --evidence` |
+
+```python
+from protocol_drift import ks_drift, quantile_alignment
+
+drift = ks_drift(protocol_a_feature, protocol_b_feature)   # KS test + verdict
+print(drift.statistic, drift.p_value, drift.significant)
+print(drift.verdict_en)                                    # says what this cannot prove
+
+table = quantile_alignment(reference, target)              # columns: quantile, reference, target, delta
+```
+
+It is **offline by construction**: the module reads only CSV artifacts committed under `results/`, so the diagnostics run without the multi-GB MIT/NASA downloads. `--demo` prints a known-answer control — synthetic same-distribution pairs must stay under the significance threshold (swept over 400 seeded trials; empirical flag rate 0.028 against α = 0.05), while a deliberate +1 σ shift is caught at D = 0.425, p = 1.4 × 10⁻¹⁶. The suite pins both directions (`python -m pytest tests -q`, **11 tests**).
+
+Reproducing the numbers on this page from committed artifacts (`python scripts/protocol_drift.py --evidence`):
+
+| Claim on this page | Committed artifact | Value reproduced offline |
+|---|---|---|
+| zero-shot MIT→NASA EN blows up **×75–125** | `results/5_跨数据集迁移/零样本预测案例.csv` | EN **×74.8–125.3** (the unrounded form of ×75–125), RF ×2.25–3.14 |
+| matching the voltage window makes it **worse** (E1 **×120 → ×246**) | `results/5_跨数据集迁移/域间隙拆账_四实验.csv` | EN geometric-mean ratio **×120.42 (E0) → ×246.11 (E1)** |
+| NASA observations fall outside the MIT dev P05–P95 band | `results/mit_features.csv` (official 84-cell dev pool) + `.../MIT特征分位对照.csv` | **18/18** cell × feature observations outside the band |
+| cross-batch drift is measured, not assumed | `results/mit_features.csv` | dev vs batch3: **6/6** features significant (KS) |
+
+**Scope boundary — what this tool cannot show:**
+
+- A significant KS result says two samples are unlikely to share one continuous distribution. It does **not** prove causation, does **not** identify which protocol knob moved, and does **not** license a numeric transfer or a pooled model.
+- A non-significant result is **not** evidence that two protocols are identical. With the sample sizes here (n = 3 NASA cells; n = 84 vs 44 MIT cells) power is low, and "no detectable shift" is not "equivalent".
+- The figures above are reproduced from **committed CSV artifacts**, not by re-running the pipelines. Regenerating the pipelines from scratch needs the raw datasets: download MIT-Stanford and NASA PCoE following `data/README.md` into `data/mit` and `data/nasa`, then run `python scripts/run_project.py --stage extensions`. Without those downloads the pipeline routes cannot run — the diagnostics can, because they consume only `results/`.
 
 ## Four ways to use this guide
 

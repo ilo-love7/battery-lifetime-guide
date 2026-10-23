@@ -59,12 +59,51 @@ Typical uses: (1) 当作 Severson 2019 的**可运行参照实现**，把自己�
 (3) 当作**电池数据课程的教学材料**——13 份中文文档，每个阶段都配动手练习；
 (4) 当作**求职作品与面试准备路线**，含 30 问问答卡（[`docs/10_面试问答卡.md`](docs/10_面试问答卡.md)）。
 
-本仓库的自检全部可离线完成：`python -m pytest tests -q` 在无数据集下跑 **6 个测试**，
+本仓库的自检全部可离线完成：`python -m pytest tests -q` 在无数据集下跑 **11 个测试**，
 `python scripts/run_project.py --stage quick` 跑无数据教学演示，
 `python scripts/run_project.py --stage full --dry-run` 在完全不碰数据的情况下校验 full 路线全部 16 个脚本步骤。
 复现类路线（`paper`、`extensions`、`optimization`）需要按 [`data/README.md`](data/README.md) 把 MIT-Stanford 与
 NASA PCoE 数据集放到 `data/mit`、`data/nasa`；`full` 路线会重复解析约 8.3GB MIT 数据，只想复现论文时用 `paper`。
 CI（workflow `tests`）目前只覆盖 Linux（`ubuntu-latest`）+ Python 3.14。
+
+## 判断两条协议到底可不可比
+
+本页所有数字都压在一个问题上：**两组电池究竟可不可比？** 与其只写在文字里，`scripts/protocol_drift.py` 把它做成可复用的诊断——两样本 Kolmogorov–Smirnov 漂移检验 + 分位对齐表——而且每一条输出结论都自带「它**不能**证明什么」。
+
+| 诊断能力 | 入口 |
+|---|---|
+| 两样本漂移检验（KS 统计量、p 值、中位漂移） | `protocol_drift.ks_drift` |
+| 目标分布相对参照分布的分位对齐 | `protocol_drift.quantile_alignment` |
+| 观测是否落在参照 P05–P95 带内 | `protocol_drift.band_audit`、`protocol_drift.feature_band_audit` |
+| 多协议两两对比矩阵 | `protocol_drift.ks_matrix` |
+| 用仓内已提交 CSV 复现本页头条数字 | `python scripts/protocol_drift.py --evidence` |
+
+```python
+from protocol_drift import ks_drift, quantile_alignment
+
+drift = ks_drift(protocol_a_feature, protocol_b_feature)   # KS 检验 + 结论口径
+print(drift.statistic, drift.p_value, drift.significant)
+print(drift.verdict_en)                                    # 明确写出这不能证明什么
+
+table = quantile_alignment(reference, target)              # 列：quantile, reference, target, delta
+```
+
+它**天生离线**：只读 `results/` 下已提交的 CSV，不需要下载数 GB 的 MIT/NASA 数据就能跑诊断。`--demo` 打印一组「已知答案」对照——合成同分布的两份样本必须不越显著阈值（400 次带种子重复实测命中率 0.028，α = 0.05），而人为 +1σ 平移被检出 D = 0.425、p = 1.4 × 10⁻¹⁶；测试把这两个方向都固化（`python -m pytest tests -q`，**11 个测试**）。
+
+用已提交产物复现本页数字（`python scripts/protocol_drift.py --evidence`）：
+
+| 本页结论 | 已提交产物 | 离线复现值 |
+|---|---|---|
+| MIT→NASA 零样本 EN 失控 **×75–125** | `results/5_跨数据集迁移/零样本预测案例.csv` | EN **×74.8–125.3**（即 ×75–125 的未取整形式），RF ×2.25–3.14 |
+| 匹配电压窗口反而**更糟**（E1 **×120 → ×246**） | `results/5_跨数据集迁移/域间隙拆账_四实验.csv` | EN 几何平均倍率 **×120.42（E0）→ ×246.11（E1）** |
+| NASA 观测落在 MIT dev P05–P95 带外 | `results/mit_features.csv`（84 颗官方 dev 池）+ `.../MIT特征分位对照.csv` | **18/18** 个电池×特征观测越界 |
+| 批次间漂移是实测而非假设 | `results/mit_features.csv` | dev vs batch3：**6/6** 特征显著（KS） |
+
+**适用边界——这个工具不能证明什么：**
+
+- KS 显著只说明两份样本不太可能来自同一条连续分布；它**不**证明因果，**不**能指出是哪个协议旋钮动了，也**不**能据此做数值迁移或合并建模。
+- 不显著**不等于**两条协议一致。本仓库的样本量（NASA n = 3；MIT n = 84 vs 44）功效很低，「没检出漂移」不是「等价」。
+- 上表数字来自**已提交的 CSV 产物**，不是重跑管线。要从零重跑管线必须拿到原始数据：按 `data/README.md` 下载 MIT-Stanford 与 NASA PCoE 到 `data/mit`、`data/nasa`，再跑 `python scripts/run_project.py --stage extensions`。没有这些下载，复现类路线跑不了；而这些诊断能跑，因为它们只消费 `results/`。
 
 ## 这份攻略的四种打开方式
 
