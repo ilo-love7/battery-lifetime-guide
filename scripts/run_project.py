@@ -92,6 +92,12 @@ def validate_inputs(stage: str, paths: ProjectPaths) -> None:
 def main() -> int:
     args = parse_args()
     env = os.environ.copy()
+    # 子脚本继承 UTF-8 stdout：Windows 控制台默认是 cp1252/cp936，会让子脚本里的
+    # 中文 print 崩掉（实测 GitHub windows-latest 上 `--stage quick` 红在
+    # toy_random_forest.py 的中文/制表符输出）。project_config 的 import 侧已经有
+    # 同一道守卫，这里再兜一层，覆盖不导入 project_config 的脚本；用户显式设置的
+    # PYTHONIOENCODING 优先（setdefault 不覆盖）。
+    env.setdefault("PYTHONIOENCODING", "utf-8")
     if args.config:
         config_path = args.config if args.config.is_absolute() else PROJECT_ROOT / args.config
         env["BATTERY_CONFIG"] = str(config_path.resolve())

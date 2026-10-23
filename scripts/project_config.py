@@ -3,10 +3,41 @@
 from __future__ import annotations
 
 import os
+import sys
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
+
+
+def enable_utf8_stdout() -> None:
+    """把 stdout / stderr 切到 UTF-8，让中文与制表/箭头字符在 Windows 上也能打印。
+
+    为什么需要：本仓库的脚本会打印中文与制表符（例如决策树里的 ``├─ 是 →``），
+    而 Windows 控制台默认编码是 cp1252 / cp936。实测 GitHub 的 windows-latest
+    runner 上 ``python scripts/run_project.py --stage quick`` 直接崩在
+    ``print(f"路线 ...")``：
+
+        UnicodeEncodeError: 'charmap' codec can't encode characters ...
+
+    ``errors="replace"`` 是兜底：万一某个字符连 UTF-8 都写不出去，宁可打成 ``?``，
+    也不要让整条路线在最后一步倒下。
+
+    在本模块**模块级**调用是有意的：``scripts/`` 下会打印非 ASCII 的脚本里绝大多数
+    都 ``from project_config import ...``，所以这一处就覆盖了 CI 会跑的整条路线；
+    剩下三个不导入本模块的脚本（protocol_drift / render_github_banner /
+    step5d_validate_km）自行显式调用。
+    """
+    for name in ("stdout", "stderr"):
+        stream = getattr(sys, name, None)
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            # 流被换成非 TextIOWrapper（例如 pytest 的捕获对象）或已关闭：无需处理。
+            pass
+
+
+enable_utf8_stdout()
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]

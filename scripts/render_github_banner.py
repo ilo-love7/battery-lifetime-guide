@@ -12,6 +12,11 @@ import pandas as pd
 from matplotlib.font_manager import FontProperties
 from PIL import Image, ImageDraw, ImageFont
 
+from project_config import enable_utf8_stdout
+
+# Windows 控制台默认 cp1252：本脚本会打印中文进度，必须先把 stdout 切成 UTF-8。
+enable_utf8_stdout()
+
 
 ROOT = Path(__file__).resolve().parents[1]
 PREDICTIONS = ROOT / "results" / "阶段43f_论文主测试逐颗误差.csv"

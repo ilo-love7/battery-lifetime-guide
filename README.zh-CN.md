@@ -59,7 +59,7 @@ Typical uses: (1) 当作 Severson 2019 的**可运行参照实现**，把自己�
 (3) 当作**电池数据课程的教学材料**——13 份中文文档，每个阶段都配动手练习；
 (4) 当作**求职作品与面试准备路线**，含 30 问问答卡（[`docs/10_面试问答卡.md`](docs/10_面试问答卡.md)）。
 
-本仓库的自检全部可离线完成：`python -m pytest tests -q` 在无数据集下跑 **11 个测试**，
+本仓库的自检全部可离线完成：`python -m pytest tests -q` 在无数据集下跑 **16 个测试**，
 `python scripts/run_project.py --stage quick` 跑无数据教学演示，
 `python scripts/run_project.py --stage full --dry-run` 在完全不碰数据的情况下校验 full 路线全部 16 个脚本步骤。
 复现类路线（`paper`、`extensions`、`optimization`）需要按 [`data/README.md`](data/README.md) 把 MIT-Stanford 与
@@ -88,7 +88,7 @@ print(drift.verdict_en)                                    # 明确写出这不�
 table = quantile_alignment(reference, target)              # 列：quantile, reference, target, delta
 ```
 
-它**天生离线**：只读 `results/` 下已提交的 CSV，不需要下载数 GB 的 MIT/NASA 数据就能跑诊断。`--demo` 打印一组「已知答案」对照——合成同分布的两份样本必须不越显著阈值（400 次带种子重复实测命中率 0.028，α = 0.05），而人为 +1σ 平移被检出 D = 0.425、p = 1.4 × 10⁻¹⁶；测试把这两个方向都固化（`python -m pytest tests -q`，**11 个测试**）。
+它**天生离线**：只读 `results/` 下已提交的 CSV，不需要下载数 GB 的 MIT/NASA 数据就能跑诊断。`--demo` 打印一组「已知答案」对照——合成同分布的两份样本必须不越显著阈值（400 次带种子重复实测命中率 0.028，α = 0.05），而人为 +1σ 平移被检出 D = 0.425、p = 1.4 × 10⁻¹⁶；测试把这两个方向都固化（`python -m pytest tests -q`，**16 个测试**）。
 
 用已提交产物复现本页数字（`python scripts/protocol_drift.py --evidence`）：
 

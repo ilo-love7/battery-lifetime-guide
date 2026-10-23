@@ -39,6 +39,12 @@ import numpy as np
 import pandas as pd
 from scipy.stats import ks_2samp
 
+from project_config import enable_utf8_stdout
+
+# 本脚本不导入 project_config 的其它内容，但需要那道 UTF-8 stdout 守卫：
+# `--evidence` / 矩阵输出会打印中文结论，Windows 控制台默认 cp1252 会崩。
+enable_utf8_stdout()
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RESULTS_DIR = PROJECT_ROOT / "results"
 DRIFT_DIR = RESULTS_DIR / "5_跨数据集迁移"

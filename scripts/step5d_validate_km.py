@@ -15,6 +15,11 @@ import pathlib
 import pandas as pd
 from lifelines import KaplanMeierFitter
 
+from project_config import enable_utf8_stdout
+
+# Windows 控制台默认 cp1252：本脚本会打印中文对比表，必须先把 stdout 切成 UTF-8。
+enable_utf8_stdout()
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 km_csv = ROOT / "results" / "5_跨数据集迁移" / "KM生存表.csv"
 

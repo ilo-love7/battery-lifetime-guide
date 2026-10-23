@@ -61,7 +61,7 @@ Typical uses: (1) a **worked reference implementation** of Severson 2019 to diff
 (3) **teaching material** for a battery-data course — 13 Chinese documents with hands-on exercises at every stage;
 (4) a **portfolio / interview-preparation route** with 30 Q&A cards ([`docs/10_面试问答卡.md`](docs/10_面试问答卡.md)).
 
-Everything needed to smoke-test the repository is offline: `python -m pytest tests -q` runs **11 tests** with no datasets,
+Everything needed to smoke-test the repository is offline: `python -m pytest tests -q` runs **16 tests** with no datasets,
 `python scripts/run_project.py --stage quick` runs the data-free tutorial demo, and
 `python scripts/run_project.py --stage full --dry-run` validates all 16 script steps of the full route without touching data.
 The reproduction routes (`paper`, `extensions`, `optimization`) need the MIT-Stanford and NASA PCoE datasets placed under
@@ -90,7 +90,7 @@ print(drift.verdict_en)                                    # says what this cann
 table = quantile_alignment(reference, target)              # columns: quantile, reference, target, delta
 ```
 
-It is **offline by construction**: the module reads only CSV artifacts committed under `results/`, so the diagnostics run without the multi-GB MIT/NASA downloads. `--demo` prints a known-answer control — synthetic same-distribution pairs must stay under the significance threshold (swept over 400 seeded trials; empirical flag rate 0.028 against α = 0.05), while a deliberate +1 σ shift is caught at D = 0.425, p = 1.4 × 10⁻¹⁶. The suite pins both directions (`python -m pytest tests -q`, **11 tests**).
+It is **offline by construction**: the module reads only CSV artifacts committed under `results/`, so the diagnostics run without the multi-GB MIT/NASA downloads. `--demo` prints a known-answer control — synthetic same-distribution pairs must stay under the significance threshold (swept over 400 seeded trials; empirical flag rate 0.028 against α = 0.05), while a deliberate +1 σ shift is caught at D = 0.425, p = 1.4 × 10⁻¹⁶. The suite pins both directions (`python -m pytest tests -q`, **16 tests**).
 
 Reproducing the numbers on this page from committed artifacts (`python scripts/protocol_drift.py --evidence`):
 
