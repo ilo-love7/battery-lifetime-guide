@@ -43,6 +43,31 @@ On the official `test_ind` split (n = 43), an elastic net on 6 early-cycle featu
 - **Domain-gap accounting** — four matched experiments rule out the suspects: label definition is excluded (E2 ×202), the voltage-window hypothesis is excluded *and reversed* (v2.1 rerun: a true 3.6–3.8 V slice goes E1 ×120 → ×246, so matching the window makes it worse). The main culprit is **protocol-level non-stationarity** — "the same early fingerprint, a different future".
 - **Kaplan–Meier survival analysis** — the 11 censored cells turn from "discarded" into information: median lifetime **125 cycles**.
 
+## What you can do with this guide
+
+Six concrete jobs, each with a runnable entry point in this repository (CPU only; the tutorial route needs no datasets at all):
+
+| Job | Entry point |
+|---|---|
+| **Try the whole pipeline with zero data** (toy random-forest demo; the "floor effect" on a synthetic 12-cell set) | `python scripts/run_project.py --stage quick` · `scripts/toy_random_forest.py` |
+| **Reproduce the paper on the official `test_ind` split** (6-feature elastic net → 5.9% median error) | `python scripts/run_project.py --stage paper` · `scripts/step4_3f_official_split.py` |
+| **Audit a public battery dataset before trusting its labels** (all 34 NASA cells examined; the label holds for only 3/34) | `python scripts/run_project.py --stage extensions` · `scripts/step5a_parse_nasa_v4.py` |
+| **Measure cross-dataset transfer and account for the domain gap** (zero-shot MIT→NASA blows up ×75–125; the culprit is protocol-level non-stationarity) | `scripts/step5b_zero_shot_v2.py` · `scripts/step5c_decompose_v2.py` |
+| **Turn censored cells into information with Kaplan–Meier survival analysis** | `scripts/step5d_survival_v2.py` · `scripts/step5d_validate_km.py` |
+| **Run and extend the step-6 optimisation experiments** (main / transfer / survival) | `python scripts/run_project.py --stage optimization` · `scripts/step6a_main_optimization_v1.py`, `scripts/step6b_transfer_optimization_v1.py`, `scripts/step6c_survival_optimization_v1.py` |
+
+Typical uses: (1) a **worked reference implementation** of Severson 2019 to diff your own reproduction against;
+(2) a **dataset-audit checklist** ([`docs/06_数据集审计方法论.md`](docs/06_数据集审计方法论.md)) to apply before adopting any public battery dataset;
+(3) **teaching material** for a battery-data course — 13 Chinese documents with hands-on exercises at every stage;
+(4) a **portfolio / interview-preparation route** with 30 Q&A cards ([`docs/10_面试问答卡.md`](docs/10_面试问答卡.md)).
+
+Everything needed to smoke-test the repository is offline: `python -m pytest tests -q` runs **6 tests** with no datasets,
+`python scripts/run_project.py --stage quick` runs the data-free tutorial demo, and
+`python scripts/run_project.py --stage full --dry-run` validates all 16 script steps of the full route without touching data.
+The reproduction routes (`paper`, `extensions`, `optimization`) need the MIT-Stanford and NASA PCoE datasets placed under
+`data/mit` and `data/nasa` as described in [`data/README.md`](data/README.md); the `full` route re-parses roughly 8.3 GB of
+MIT data, so use `paper` if you only want the reproduction. CI (workflow `tests`) runs on Linux (`ubuntu-latest`) with Python 3.14 only.
+
 ## Four ways to use this guide
 
 | If you are… | Route | Entry point |

@@ -41,6 +41,31 @@
 - **域间隙拆账**：四实验拆嫌疑——标签口径已排除（E2 ×202），窗口嫌疑已排除且反转（v2.1 重跑：真 3.6–3.8V 切片 E1 ×120→×246，匹配窗口反而更糟）→ 主犯=**协议级非平稳性**——"同样的早期指纹，不同的未来"；
 - **KM 生存分析**：把 11 颗删失电池从"被丢弃"变成信息源，中位寿命 125 圈。
 
+## 用途 / 你能用它做什么
+
+六件具体的事，每件都有本仓库内可运行的入口（纯 CPU，教程路线完全不需要数据集）：
+
+| 用途 | 真实入口（脚本/模块路径） |
+|---|---|
+| **零数据先把整条管线跑一遍**（玩具随机森林演示；合成 12 颗电池上的"地板效应"） | `python scripts/run_project.py --stage quick` · `scripts/toy_random_forest.py` |
+| **在官方 `test_ind` 划分上复现论文**（六特征弹性网络 → 5.9% 中位误差） | `python scripts/run_project.py --stage paper` · `scripts/step4_3f_official_split.py` |
+| **在采信任何公开电池数据集之前做审计**（NASA 34 颗逐颗体检；标签只对 3/34 成立） | `python scripts/run_project.py --stage extensions` · `scripts/step5a_parse_nasa_v4.py` |
+| **量化跨数据集迁移并拆解域间隙**（MIT→NASA 零样本迁移失控 ×75~125；主犯=协议级非平稳性） | `scripts/step5b_zero_shot_v2.py` · `scripts/step5c_decompose_v2.py` |
+| **用 Kaplan–Meier 生存分析把删失电池变成信息源** | `scripts/step5d_survival_v2.py` · `scripts/step5d_validate_km.py` |
+| **运行并扩展 step6 优化实验**（主实验 / 迁移 / 生存分析） | `python scripts/run_project.py --stage optimization` · `scripts/step6a_main_optimization_v1.py`、`scripts/step6b_transfer_optimization_v1.py`、`scripts/step6c_survival_optimization_v1.py` |
+
+Typical uses: (1) 当作 Severson 2019 的**可运行参照实现**，把自己那份复现拿来逐项对照；
+(2) 当作**数据集审计清单**（[`docs/06_数据集审计方法论.md`](docs/06_数据集审计方法论.md)），在任何公开电池数据集上套用；
+(3) 当作**电池数据课程的教学材料**——13 份中文文档，每个阶段都配动手练习；
+(4) 当作**求职作品与面试准备路线**，含 30 问问答卡（[`docs/10_面试问答卡.md`](docs/10_面试问答卡.md)）。
+
+本仓库的自检全部可离线完成：`python -m pytest tests -q` 在无数据集下跑 **6 个测试**，
+`python scripts/run_project.py --stage quick` 跑无数据教学演示，
+`python scripts/run_project.py --stage full --dry-run` 在完全不碰数据的情况下校验 full 路线全部 16 个脚本步骤。
+复现类路线（`paper`、`extensions`、`optimization`）需要按 [`data/README.md`](data/README.md) 把 MIT-Stanford 与
+NASA PCoE 数据集放到 `data/mit`、`data/nasa`；`full` 路线会重复解析约 8.3GB MIT 数据，只想复现论文时用 `paper`。
+CI（workflow `tests`）目前只覆盖 Linux（`ubuntu-latest`）+ Python 3.14。
+
 ## 这份攻略的四种打开方式
 
 | 你是谁 | 路线 | 入口 |
