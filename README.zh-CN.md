@@ -64,7 +64,7 @@ Typical uses: (1) 当作 Severson 2019 的**可运行参照实现**，把自己�
 `python scripts/run_project.py --stage full --dry-run` 在完全不碰数据的情况下校验 full 路线全部 16 个脚本步骤。
 复现类路线（`paper`、`extensions`、`optimization`）需要按 [`data/README.md`](data/README.md) 把 MIT-Stanford 与
 NASA PCoE 数据集放到 `data/mit`、`data/nasa`；`full` 路线会重复解析约 8.3GB MIT 数据，只想复现论文时用 `paper`。
-CI（workflow `tests`）目前只覆盖 Linux（`ubuntu-latest`）+ Python 3.14。
+CI（workflow `tests`）覆盖 `ubuntu-latest` 与 `windows-latest` 两端，跑同一套离线命令，Python 3.14。
 
 ## 判断两条协议到底可不可比
 

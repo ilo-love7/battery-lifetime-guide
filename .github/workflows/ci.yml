@@ -30,3 +30,30 @@ jobs:
         run: python scripts/run_project.py --stage quick
       - name: Validate full route manifest without datasets
         run: python scripts/run_project.py --stage full --dry-run
+
+  # 同一套命令在 Windows 上再跑一遍：这条 leg 是新增的，上面的 ubuntu job
+  # 一个字未动。所有 step 都是纯 python/pip 调用，没有 POSIX-only 的 shell 构造，
+  # 因此可以直接用 windows-latest 的默认 shell（pwsh），不需要 bash。
+  # MPLBACKEND=Agg 与 ubuntu job 保持一致：Windows runner 没有显示设备，
+  # matplotlib 的默认 TkAgg 后端会取不到窗口。
+  python-tests-windows:
+    runs-on: windows-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile scripts
+        run: python -m compileall -q scripts tests
+      - name: Run tests
+        run: python -m pytest tests -q
+      - name: Run data-free tutorial demo
+        run: python scripts/run_project.py --stage quick
+      - name: Validate full route manifest without datasets
+        run: python scripts/run_project.py --stage full --dry-run

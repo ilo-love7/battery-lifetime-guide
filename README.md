@@ -66,7 +66,7 @@ Everything needed to smoke-test the repository is offline: `python -m pytest tes
 `python scripts/run_project.py --stage full --dry-run` validates all 16 script steps of the full route without touching data.
 The reproduction routes (`paper`, `extensions`, `optimization`) need the MIT-Stanford and NASA PCoE datasets placed under
 `data/mit` and `data/nasa` as described in [`data/README.md`](data/README.md); the `full` route re-parses roughly 8.3 GB of
-MIT data, so use `paper` if you only want the reproduction. CI (workflow `tests`) runs on Linux (`ubuntu-latest`) with Python 3.14 only.
+MIT data, so use `paper` if you only want the reproduction. CI (workflow `tests`) runs the same offline commands on **`ubuntu-latest` and `windows-latest`** with Python 3.14.
 
 ## Checking whether two protocols are comparable
 
