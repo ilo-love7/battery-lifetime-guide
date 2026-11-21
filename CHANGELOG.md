@@ -5,6 +5,35 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-11-21
+
+Documentation-only release: a curated map of the sibling battery repositories.
+**No reproduction number in this repository changed, and no negative result was removed.**
+
+### Added
+
+- **`docs/13_电池项目地图.md` — a layered map of ten battery repositories** (material →
+  device/electrochemistry → algorithm/BMS → system → data/benchmark). Each entry is admitted only
+  if it has (1) a verifiable number that can be traced to a file in that repository, (2) a list of
+  negative results, and (3) an explicit interface with this guide (which section to read first,
+  which open question it answers afterwards). The map also states **three numbers that are routinely
+  put in the same table but are not comparable** (SOH 1.90 pp / voltage MAE 0.352 V / median 5.9%)
+  and why comparing them is a protocol error.
+- **Expanded 「关联仓库」/「Related repositories」 tables** in `README.md` and `README.zh-CN.md`:
+  from 7 entries to 14, grouped by layer, with a pointer to the new map and a three-repository
+  starting set for readers who do not want to read ten.
+- **`tests/test_project_map.py` — documentation-integrity tests (4 new, suite now 20)**: the map's
+  §13.2 table must cover exactly the expected repositories with canonical URLs, every row must have
+  five columns, a valid layer and a digit-bearing "verifiable number", and both READMEs must link
+  every repository plus the map. Adding a repository to only one of the three places now fails CI
+  instead of silently drifting.
+- `docs/00_怎么用这份攻略.md` route C and `RELATED.md` §5 now point at the map, so the "unified
+  entry point" discussed there exists as a document rather than a new repository.
+
+### Changed
+
+- Test-count references in both READMEs updated from 16 to 20.
+
 ## [1.1.0] - 2026-10-23
 
 Functional additions on top of v1.0.0: a reusable protocol-drift diagnostic, a second

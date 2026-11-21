@@ -61,7 +61,7 @@ Typical uses: (1) a **worked reference implementation** of Severson 2019 to diff
 (3) **teaching material** for a battery-data course — 13 Chinese documents with hands-on exercises at every stage;
 (4) a **portfolio / interview-preparation route** with 30 Q&A cards ([`docs/10_面试问答卡.md`](docs/10_面试问答卡.md)).
 
-Everything needed to smoke-test the repository is offline: `python -m pytest tests -q` runs **16 tests** with no datasets,
+Everything needed to smoke-test the repository is offline: `python -m pytest tests -q` runs **20 tests** with no datasets,
 `python scripts/run_project.py --stage quick` runs the data-free tutorial demo, and
 `python scripts/run_project.py --stage full --dry-run` validates all 16 script steps of the full route without touching data.
 The reproduction routes (`paper`, `extensions`, `optimization`) need the MIT-Stanford and NASA PCoE datasets placed under
@@ -90,7 +90,7 @@ print(drift.verdict_en)                                    # says what this cann
 table = quantile_alignment(reference, target)              # columns: quantile, reference, target, delta
 ```
 
-It is **offline by construction**: the module reads only CSV artifacts committed under `results/`, so the diagnostics run without the multi-GB MIT/NASA downloads. `--demo` prints a known-answer control — synthetic same-distribution pairs must stay under the significance threshold (swept over 400 seeded trials; empirical flag rate 0.028 against α = 0.05), while a deliberate +1 σ shift is caught at D = 0.425, p = 1.4 × 10⁻¹⁶. The suite pins both directions (`python -m pytest tests -q`, **16 tests**).
+It is **offline by construction**: the module reads only CSV artifacts committed under `results/`, so the diagnostics run without the multi-GB MIT/NASA downloads. `--demo` prints a known-answer control — synthetic same-distribution pairs must stay under the significance threshold (swept over 400 seeded trials; empirical flag rate 0.028 against α = 0.05), while a deliberate +1 σ shift is caught at D = 0.425, p = 1.4 × 10⁻¹⁶. The suite pins both directions (`python -m pytest tests -q`, **20 tests**).
 
 Reproducing the numbers on this page from committed artifacts (`python scripts/protocol_drift.py --evidence`):
 
@@ -140,6 +140,7 @@ Reproducing the numbers on this page from committed artifacts (`python scripts/p
 │   ├── 10_面试问答卡.md            30 interview questions
 │   ├── 11_实习求职包装指南.md      ★ portfolio packaging, resume templates, honesty boundaries
 │   ├── 12_代码优化提案.md          optimisation experiment menu
+│   ├── 13_电池项目地图.md          ★ layered map of ten battery repositories (question / number / interface / scope)
 │   ├── buggy_注释版/               ★ annotated buggy code (teaching only, do not run)
 │   └── archive/                    raw work logs, full error list
 ├── scripts/                   frozen scripts step1–5d; step6 is a separate optimisation experiment
@@ -189,10 +190,24 @@ This repository is part of a set of work on batteries and transport modelling by
 
 | Repository | What it covers |
 |---|---|
+| [battery-lifetime-guide](https://github.com/ilo-love7/battery-lifetime-guide) | **This repository**: from-scratch reproduction of Severson et al. 2019 (cycle-life prediction), crash scenes included |
 | [battery-cathode-ml](https://github.com/ilo-love7/battery-cathode-ml) | Cathode material screening: band gap, formation energy, voltage, capacity + uncertainty and multi-objective decisions |
-| [battery-lifetime-guide](https://github.com/ilo-love7/battery-lifetime-guide) | From-scratch reproduction of Severson et al. 2019 (cycle-life prediction), crash scenes included |
-| [battery-soh-tsfm-benchmark](https://github.com/ilo-love7/battery-soh-tsfm-benchmark) | Do zero-shot time-series foundation models beat linear extrapolation? Three-dataset SOH benchmark |
+| [pybamm-p2d-gsa](https://github.com/ilo-love7/pybamm-p2d-gsa) | Global parameter sensitivity of a P2D/DFN model: Morris screening + Sobol variance decomposition (21,468 simulations) |
 | [battery-ecm-rul](https://github.com/ilo-love7/battery-ecm-rul) | Thevenin ECM parameter identification + early cycle-life prediction + PyBaMM simulation |
+| [lithium-plating-detection](https://github.com/ilo-love7/lithium-plating-detection) | Four non-destructive lithium-plating methods, graded by evidence level on synthetic vs real cells |
+| [battery-soc-ekf-ukf](https://github.com/ilo-love7/battery-soc-ekf-ukf) | EKF/UKF/AEKF package over 24 driving profiles: model error, not the filter, is the floor |
+| [battery-soh-ev-online](https://github.com/ilo-love7/battery-soh-ev-online) | Capacity and SOH from a single everyday charging session: 191 cars, 38,744 sessions |
+| [battery-fastcharge-opt](https://github.com/ilo-love7/battery-fastcharge-opt) | Fast-charging protocol optimisation: 240 cells, 61 protocols, plating-aware constraints |
+| [battery-thermal-management](https://github.com/ilo-love7/battery-thermal-management) | Heat generation, cooling selection map, lifetime accounting, deep-fade failure modes |
+| [battery-fault-diagnosis](https://github.com/ilo-love7/battery-fault-diagnosis) | Voltage/temperature time series → healthy / over-discharge / internal-short classification and alarm design |
+| [battery-soh-tsfm-benchmark](https://github.com/ilo-love7/battery-soh-tsfm-benchmark) | Do zero-shot time-series foundation models beat linear extrapolation? Three-dataset SOH benchmark |
 | [drift-diffusion-pn-junction](https://github.com/ilo-love7/drift-diffusion-pn-junction) | Self-contained 1D drift–diffusion–Poisson solver with three-layer verification |
 | [car-following](https://github.com/ilo-love7/car-following) | Car-following traffic modelling toolkit (7 models, stability, calibration, lane changing, EV energy) |
 | [project-packer](https://github.com/ilo-love7/project-packer) | Turning real project work into interview-defensible experience (fact dossier + question tree) |
+
+**Where to start?** The ten battery repositories are arranged as material → device → algorithm →
+system → benchmark, each annotated with the question it answers, one verifiable number, and its
+interface with this guide: [docs/13_电池项目地图.md](docs/13_电池项目地图.md) (Chinese).
+If you only pick three: `battery-ecm-rul` (the other implementation of the same paper),
+`battery-soh-tsfm-benchmark` (what a fair benchmark means), `lithium-plating-detection`
+(the sensor-level version of "are the labels trustworthy?").

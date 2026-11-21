@@ -59,7 +59,7 @@ Typical uses: (1) 当作 Severson 2019 的**可运行参照实现**，把自己�
 (3) 当作**电池数据课程的教学材料**——13 份中文文档，每个阶段都配动手练习；
 (4) 当作**求职作品与面试准备路线**，含 30 问问答卡（[`docs/10_面试问答卡.md`](docs/10_面试问答卡.md)）。
 
-本仓库的自检全部可离线完成：`python -m pytest tests -q` 在无数据集下跑 **16 个测试**，
+本仓库的自检全部可离线完成：`python -m pytest tests -q` 在无数据集下跑 **20 个测试**，
 `python scripts/run_project.py --stage quick` 跑无数据教学演示，
 `python scripts/run_project.py --stage full --dry-run` 在完全不碰数据的情况下校验 full 路线全部 16 个脚本步骤。
 复现类路线（`paper`、`extensions`、`optimization`）需要按 [`data/README.md`](data/README.md) 把 MIT-Stanford 与
@@ -88,7 +88,7 @@ print(drift.verdict_en)                                    # 明确写出这不�
 table = quantile_alignment(reference, target)              # 列：quantile, reference, target, delta
 ```
 
-它**天生离线**：只读 `results/` 下已提交的 CSV，不需要下载数 GB 的 MIT/NASA 数据就能跑诊断。`--demo` 打印一组「已知答案」对照——合成同分布的两份样本必须不越显著阈值（400 次带种子重复实测命中率 0.028，α = 0.05），而人为 +1σ 平移被检出 D = 0.425、p = 1.4 × 10⁻¹⁶；测试把这两个方向都固化（`python -m pytest tests -q`，**16 个测试**）。
+它**天生离线**：只读 `results/` 下已提交的 CSV，不需要下载数 GB 的 MIT/NASA 数据就能跑诊断。`--demo` 打印一组「已知答案」对照——合成同分布的两份样本必须不越显著阈值（400 次带种子重复实测命中率 0.028，α = 0.05），而人为 +1σ 平移被检出 D = 0.425、p = 1.4 × 10⁻¹⁶；测试把这两个方向都固化（`python -m pytest tests -q`，**20 个测试**）。
 
 用已提交产物复现本页数字（`python scripts/protocol_drift.py --evidence`）：
 
@@ -136,6 +136,7 @@ table = quantile_alignment(reference, target)              # 列：quantile, ref
 │   ├── 10_面试问答卡.md            30 问
 │   ├── 11_实习求职包装指南.md      ★ 怎么完成项目/简历模板/面试话术/诚信边界
 │   ├── 12_代码优化提案.md          优化实验菜单（约束/优先级/判读标准）
+│   ├── 13_电池项目地图.md          ★ 十个电池仓库的分层地图（问题/数字/接口/口径边界）
 │   ├── buggy_注释版/               ★ 带事故注释的 bug 版代码（勿运行，教学用）
 │   └── archive/                    原始工作日志、完整错误清单
 ├── scripts/                   定稿脚本 step1~5d；step6 为独立优化实验
@@ -198,10 +199,22 @@ table = quantile_alignment(reference, target)              # 列：quantile, ref
 
 | 仓库 | 内容 |
 |---|---|
+| [battery-lifetime-guide](https://github.com/ilo-love7/battery-lifetime-guide) | **本仓库**：从零复现 Severson 2019 循环寿命预测（含翻车记录） |
 | [battery-cathode-ml](https://github.com/ilo-love7/battery-cathode-ml) | 正极材料筛选：带隙 / 形成能 / 电压 / 容量 + 不确定度 + 多目标决策 |
-| [battery-lifetime-guide](https://github.com/ilo-love7/battery-lifetime-guide) | 从零复现 Severson 2019 循环寿命预测（含翻车记录） |
-| [battery-soh-tsfm-benchmark](https://github.com/ilo-love7/battery-soh-tsfm-benchmark) | 零样本时序基础模型 vs 线性外推：三数据集 SOH 基准 |
+| [pybamm-p2d-gsa](https://github.com/ilo-love7/pybamm-p2d-gsa) | P2D/DFN 全局参数敏感性：Morris 筛选 + Sobol 方差分解（21468 次仿真） |
 | [battery-ecm-rul](https://github.com/ilo-love7/battery-ecm-rul) | Thevenin ECM 参数辨识 + 早期寿命预测 + PyBaMM 仿真 |
+| [lithium-plating-detection](https://github.com/ilo-love7/lithium-plating-detection) | 析锂无损检测四方法系统验证：合成真值 vs 真实电芯的证据等级 |
+| [battery-soc-ekf-ukf](https://github.com/ilo-love7/battery-soc-ekf-ukf) | EKF/UKF/AEKF 算法包：24 条工况，模型误差是地板 |
+| [battery-soh-ev-online](https://github.com/ilo-love7/battery-soh-ev-online) | 单次日常充电估容量与 SOH：191 车 / 38,744 段 |
+| [battery-fastcharge-opt](https://github.com/ilo-love7/battery-fastcharge-opt) | 快充协议多目标优化：240 电芯 / 61 协议，含析锂约束 |
+| [battery-thermal-management](https://github.com/ilo-love7/battery-thermal-management) | 产热 / 冷却选型 map + 寿命账 + 深段失效机制 |
+| [battery-fault-diagnosis](https://github.com/ilo-love7/battery-fault-diagnosis) | 电压 / 温度时序 → 健康 / 过放 / 内短路三分类与告警设计 |
+| [battery-soh-tsfm-benchmark](https://github.com/ilo-love7/battery-soh-tsfm-benchmark) | 零样本时序基础模型 vs 线性外推：三数据集 SOH 基准 |
 | [drift-diffusion-pn-junction](https://github.com/ilo-love7/drift-diffusion-pn-junction) | 自研 1D 漂移–扩散–泊松求解器 + 三层验证 |
 | [car-following](https://github.com/ilo-love7/car-following) | 跟驰建模工具包（7 模型 / 稳定性 / 标定 / 换道 / EV 能耗） |
 | [project-packer](https://github.com/ilo-love7/project-packer) | 把真实项目包装成可防守的面试经历（事实档案 + 追问树） |
+
+**该从哪个读起？** 十个电池仓库按「材料 → 器件 → 算法 → 系统 → 基准」分层，每个仓库标注了
+它回答的问题、一个可核验数字、以及与本攻略的接口：[docs/13_电池项目地图.md](docs/13_电池项目地图.md)。
+只想挑三个：`battery-ecm-rul`（同一论文的另一实现）→ `battery-soh-tsfm-benchmark`（基准公平性）
+→ `lithium-plating-detection`（标签可信度的传感层版本）。
